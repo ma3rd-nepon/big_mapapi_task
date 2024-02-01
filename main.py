@@ -8,7 +8,7 @@ import pygame
 class BigMap:
     def __init__(self):
         self.image = None
-        self.ll = 60.153191, 55.156353
+        self.ll = [60.153191, 55.156353]
         self.layer = 'map'
         self.z = 17
 
@@ -26,9 +26,22 @@ class BigMap:
         self.image = pygame.image.load(image)
 
     def e_handler(self, e):
+        coff = 10 ** -(self.z // 4)
         if e.type == pygame.KEYDOWN:
+            if e.key == pygame.K_PAGEUP:
+                self.z = min(self.z + 1, 21)
+            if e.key == pygame.K_PAGEDOWN:
+                self.z = max(self.z - 1, 0)
             if e.key == pygame.K_w:
-                self.ll[1] += 0.001
+                self.ll[1] += coff
+            if e.key == pygame.K_s:
+                self.ll[1] -= coff
+            if e.key == pygame.K_a:
+                self.ll[0] -= coff
+            if e.key == pygame.K_d:
+                self.ll[0] += coff
+
+            self.update_map()
 
     def draw(self, screen):
         screen.blit(self.image, (0, 0))
