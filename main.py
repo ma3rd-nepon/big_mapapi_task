@@ -26,20 +26,21 @@ class BigMap:
         self.image = pygame.image.load(image)
 
     def e_handler(self, e):
-        coff = 10 ** -(self.z // 4)
+        coff = 300  # coff = 10 ** -(self.z // 4)
         if e.type == pygame.KEYDOWN:
             if e.key == pygame.K_PAGEUP:
                 self.z = min(self.z + 1, 21)
             if e.key == pygame.K_PAGEDOWN:
                 self.z = max(self.z - 1, 0)
-            if e.key == pygame.K_w:
-                self.ll[1] += coff
-            if e.key == pygame.K_s:
-                self.ll[1] -= coff
-            if e.key == pygame.K_a:
-                self.ll[0] -= coff
-            if e.key == pygame.K_d:
-                self.ll[0] += coff
+
+            if e.key == pygame.K_UP:
+                self.ll[1] = min((self.ll[1] + 70 * 2 ** (-self.z)), 88)
+            if e.key == pygame.K_DOWN:
+                self.ll[1] = max((self.ll[1] - 70 * 2 ** (-self.z)), -88)
+            if e.key == pygame.K_LEFT:
+                self.ll[0] = (self.ll[0] + 180 - (200 * (2 ** (-self.z)))) % 360 - 180
+            if e.key == pygame.K_RIGHT:
+                self.ll[0] = (self.ll[0] + 180 + (200 * (2 ** (-self.z)))) % 360 - 180
 
             self.update_map()
 
