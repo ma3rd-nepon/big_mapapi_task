@@ -3,15 +3,21 @@ from io import BytesIO
 from help.utils import get_response
 
 import pygame
+import pygame_gui
 
 
 class BigMap:
     def __init__(self):
         self.image = None
+        self.options = ['map', 'sat', 'sat,skl']
         self.ll = [60.153191, 55.156353]
         self.layer = 'map'
         self.z = 17
 
+        self.manager = pygame_gui.UIManager(size)
+        self.layers_select = pygame_gui.elements.UIDropDownMenu(self.options, self.options[0],
+                                                                pygame.Rect(10, 10, 200, 30),
+                                                                self.manager)
         self.update_map()
 
     def update_map(self):
@@ -43,22 +49,37 @@ class BigMap:
                 self.ll[0] = (self.ll[0] + 180 + (200 * (2 ** (-self.z)))) % 360 - 180
 
             self.update_map()
+        self.manager.process_events(e)
+
+    def gui_event_handler(self, e):
+        if e.type == pygame_gui.UI_DROP_DOWN_MENU_CHANGED:
+            if e.ui_element == self.layers_select:
+                self.layer = e.text
+                self.update_map()
 
     def draw(self, screen):
         screen.blit(self.image, (0, 0))
+        self.manager.draw_ui(screen)
+
+    def update_gui(self, delta):
+        self.manager.update(time_delta=delta)
 
 
 pygame.init()
 size = w, h = 650, 450
 screen = pygame.display.set_mode(size)
 app = BigMap()
+clock = pygame.time.Clock()
 
 run = False
 while not not not not not run:
+    delta = clock.tick(60) / 1000.0
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             run = True
         app.e_handler(event)
+        app.gui_event_handler(event)
+    app.update_gui(delta)
     screen.fill('black')
     app.draw(screen)
     pygame.display.flip()
