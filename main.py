@@ -1,6 +1,6 @@
 from io import BytesIO
 
-from help.utils import get_response
+from help.utils import *
 
 import pygame
 import pygame_gui
@@ -11,13 +11,17 @@ class BigMap:
         self.image = None
         self.options = ['map', 'sat', 'sat,skl']
         self.ll = [60.153191, 55.156353]
+        self.ll = get_t_coords(get_toponym(geocode('Миасс улица Макеева')))
         self.layer = 'map'
         self.z = 17
+        self.point = None
 
         self.manager = pygame_gui.UIManager(size)
         self.layers_select = pygame_gui.elements.UIDropDownMenu(self.options, self.options[0],
                                                                 pygame.Rect(10, 10, 200, 30),
                                                                 self.manager)
+        self.search_field = pygame_gui.elements.UITextEntryLine(pygame.Rect(175, 410, 300, 30), self.manager)
+        self.error_field = pygame_gui.elements.UILabel(pygame.Rect(100, 380, 500, 30), '', self.manager)
         self.update_map()
 
     def update_map(self):
@@ -27,13 +31,15 @@ class BigMap:
             "z": self.z,
             "size": "650,450"
         }
-
-        image = BytesIO(get_response('content', 'static', **map_params))
+        if self.point is not None:
+            map_params["pt"] = ','.join(map(str, self.ll)) + ',flag'
+        nuka = get_static(**map_params)
+        image = BytesIO(nuka)
         self.image = pygame.image.load(image)
 
     def e_handler(self, e):
-        coff = 300  # coff = 10 ** -(self.z // 4)
         if e.type == pygame.KEYDOWN:
+            print(e.key)
             if e.key == pygame.K_PAGEUP:
                 self.z = min(self.z + 1, 21)
             if e.key == pygame.K_PAGEDOWN:
@@ -48,7 +54,18 @@ class BigMap:
             if e.key == pygame.K_RIGHT:
                 self.ll[0] = (self.ll[0] + 180 + (200 * (2 ** (-self.z)))) % 360 - 180
 
-            self.update_map()
+            if e.key == pygame.K_RETURN:
+                if self.search_field.is_focused and self.search_field.text:
+                    try:
+                        self.ll = get_t_coords(get_toponym(geocode(self.search_field.text)))
+                        self.error_field.set_text('')
+                        self.point = self.ll
+                    except IndexError:
+                        self.error_field.set_text('Не найдено')
+
+            if e.key in [pygame.K_PAGEUP, pygame.K_PAGEDOWN, pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT, pygame.K_RETURN]:
+                self.update_map()
+
         self.manager.process_events(e)
 
     def gui_event_handler(self, e):
@@ -79,8 +96,8 @@ while not not not not not run:
             run = True
         app.e_handler(event)
         app.gui_event_handler(event)
-    app.update_gui(delta)
     screen.fill('black')
+    app.update_gui(delta)
     app.draw(screen)
-    pygame.display.flip()
+    pygame.display.update()
 pygame.quit()

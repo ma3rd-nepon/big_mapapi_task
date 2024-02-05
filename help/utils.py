@@ -1,28 +1,22 @@
 import requests
 
 
-def get_response(type_of_response, api, **par):
-    urls = {
-        'static': "http://static-maps.yandex.ru/1.x/",
-        'geocode': "http://geocode-maps.yandex.ru/1.x/",
-        'search': "https://search-maps.yandex.ru/v1/"
-    }
+def get_static(**par):
+    static_api = "http://static-maps.yandex.ru/1.x/"
+    response = requests.get(static_api, params=par)
 
-    if api == 'search':
-        api_key = 'dda3ddba-c9ea-4ead-9010-f43fbc15c6e3'
-        par['apikey'] = api_key
+    return response.content
 
-    response = requests.get(urls[api], params=par)
-    if not response:
-        print('Error {0} {1}'.format(response.status_code, response.reason))
-        print(api)
-        exit(-1)
 
-    if type_of_response == 'json':
-        return response.json()
+def search(**par):
+    search_api = "https://search-maps.yandex.ru/v1/"
 
-    if type_of_response == 'content':
-        return response.content
+    api_key = 'dda3ddba-c9ea-4ead-9010-f43fbc15c6e3'
+    par['apikey'] = api_key
+
+    response = requests.get(search_api, params=par)
+
+    return
 
 
 def get_org(json_data):
@@ -41,6 +35,24 @@ def get_spn(toponym):
     lc1, lc2 = map(float, toponym['boundedBy']['Envelope']['lowerCorner'].split())
     uc1, uc2 = map(float, toponym['boundedBy']['Envelope']['upperCorner'].split())
     return uc1 - lc1, uc2 - lc2
+
+
+def geocode(name):
+    geocode_api = "http://geocode-maps.yandex.ru/1.x/"
+
+    geocoder_params = {
+        "apikey": "40d1649f-0493-4b70-98ba-98533de7710b",
+        "geocode": name,
+        "format": "json"
+    }
+
+    response = requests.get(geocode_api, params=geocoder_params)
+
+    if not response:
+        print('Error {0} {1}'.format(response.status_code, response.reason))
+        exit(-1)
+
+    return response.json()
 
 
 def get_org_info(organization):
